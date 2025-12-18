@@ -1,19 +1,33 @@
 import { Button, Form, Select, Input, InputNumber } from 'antd';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+
+const URL_CATEGORY = "/api/book-category"
 
 export default function AddBook(props) {
-  const categories = [
-    { label: 'Fiction', value: 'fiction' },
-    { label: 'Non-Fiction', value: 'non-fiction' },
-  ]
+  const [categories, setCategories] = useState([])
 
-  const generateId = () => {
-    return Math.random().toString(36).substring(2, 15)
+  const fetchCategories = async () => {
+    try {
+      const response = await axios.get(URL_CATEGORY)
+      setCategories(response.data.map(cat => ({
+        label: cat.name,
+        value: cat.id
+      })))
+    } catch(err) {console.log(err)}
   }
 
+  useEffect(() => {
+    fetchCategories()
+  }, [])
+
   return(
-    <Form layout="inline" onFinish={values => {props.onBookAdded({...values, id: generateId()})}}>
+    <Form layout="inline" onFinish={values => {props.onBookAdded(values)}}>
       <Form.Item name="title" label="Title" rules={[{ required: true }]}>
         <Input/>
+      </Form.Item>
+      <Form.Item name="author" label="Author" rules={[{ required: true }]}>
+        <Input />
       </Form.Item>
       <Form.Item name="price" label="Price" rules={[{ required: true }]}>
         <InputNumber/>
@@ -21,7 +35,7 @@ export default function AddBook(props) {
       <Form.Item name="stock" label="Stock" rules={[{ required: true }]}>
         <InputNumber/>
       </Form.Item>
-      <Form.Item name="category" label="Category">
+      <Form.Item name="categoryId" label="Category" rules={[{required: true}]}>
         <Select allowClear style={{width:"150px"}} options={categories}/>
       </Form.Item>
       <Form.Item>

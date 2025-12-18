@@ -1,4 +1,4 @@
-import { Table, Button, Space, Popconfirm, Tag } from 'antd';
+import { Table, Button, Space, Popconfirm, Tag, Image } from 'antd';
 
 
 export default function BookList(props) {
@@ -35,11 +35,18 @@ export default function BookList(props) {
       key: 'stock',
     },
     {
+      title: "Cover",
+      dataIndex: 'coverUrl',
+      render: (text) => (
+        <Image src={`http://localhost:3080/${text}`} height={100} />
+      )
+    },
+    {
       title: 'Category',
       dataIndex: 'category',
       key: 'category',
-      render: (text) => (
-        <Tag color="blue">{text}</Tag>
+      render: (value) => (
+        <Tag color="blue">{value.name}</Tag>
       ),
     },
     {
