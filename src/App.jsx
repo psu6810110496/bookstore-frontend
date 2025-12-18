@@ -1,66 +1,39 @@
 import './App.css'
 import { useState, useEffect } from 'react';
-import BookList from "./components/BookList";
+import { Divider } from 'antd';
+import BookList from './components/BookList'
+import AddBook from './components/AddBook';
+import Clock from './components/Clock';
 
 function App() {
-  const [totalAmount, setTotalAmount] = useState(0)
+  const [totalAmount, setTotalAmount] = useState(0);
+  const [title, setTitle] = useState(null);
+  const [price, setPrice] = useState(null);
+  const [stock, setStock] = useState(null);
   const [bookData, setBookData] = useState([
-    { id: 1, title: "Harry Potter", author: "J.K. Rowling", description: "Orphan Harry learns he is a wizard", price: 15.70, isbn: "978-1408825945", stock: 10, likeCount: 7 },
-    { id: 2, title: "Sapiens", author: "Yuval Noah Harari", description: "A brief history of humankind", price: 22.99, isbn: "978-0062316097", stock: 50, likeCount: 5 },
+    { id: 1, title: "Harry Potter", author: "J.K. Rowling", description: "Orphan Harry learns he is a wizard", price: 15.70, isbn: "978-1408825945", stock: 10, likeCount: 5, category: "fiction"  },
+    { id: 2, title: "Sapiens", author: "Yuval Noah Harari", description: "A brief history of humankind", price: 22.99, isbn: "978-0062316097", stock: 50, likeCount: 7, category: "non-fiction" },
   ])
-  const [title, setTitle] = useState("")
-  const [price, setPrice] = useState(0)
-  const [stock, setStock] = useState(0)
-
-  const generateBook = () => {
-    const current = bookData.length + 1
-    return {
-      id: current,
-      title: `Dummy Book ${current}`,
-      author: `Unknown${current}`,
-      description: `Dummy Description ${current}`,
-      price: Math.floor(Math.floor(Math.random() * 20)),
-      stock: Math.floor(Math.floor(Math.random() * 50))
-    }
-  }
-
-  const handleAddBook = () => {
-    //setBookData([...bookData, generateBook()])
-    setBookData([...bookData, {title: title, price: price, stock: stock}])
-  }
-
-  const handleLiked = (bookId) => {
-    setBookData(
-      bookData.map(book => {
-        return book.id === bookId ? { ...book, likeCount: book.likeCount + 1 } : book
-      }
-    ))
-  }
-
-  const handleDeleted = (bookId) => {
-    setBookData(
-      bookData.filter(book => book.id != bookId)
-    )
-  }
-
 
   useEffect(() => {
-    setTotalAmount(bookData.reduce((total, book) => total += (book.price * book.stock), 0))
+    setTotalAmount(bookData.reduce((total, book) => total + (book.price * book.stock), 0))
   }, [bookData])
-
+  
   return (
     <>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <label>Title : </label>
-        <input type="text" onChange={(evt) => setTitle(evt.target.value)}/>
-        <label>Price : </label>
-        <input type="number" onChange={(evt) => setPrice(evt.target.value)} />
-        <label>Stock : </label>
-        <input type="number" onChange={(evt) => setStock(evt.target.value)} />
-        <button onClick={handleAddBook}>New Book</button>
+      <h1>Book Store</h1>
+      <Clock/>
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: "2em" }}>
+        <AddBook onBookAdded={book => setBookData([...bookData, book])}/>
       </div>
-      <h3>My books worth {totalAmount} dollars</h3>
-      <BookList data={bookData} onLiked={handleLiked} onDeleted={handleDeleted}/>
+      <Divider>
+        My books worth {totalAmount.toLocaleString()} dollars
+      </Divider>
+      <BookList 
+        data={bookData} 
+        onLiked={bookId => setBookData(bookData.map(book => book.id === bookId ? { ...book, likeCount: book.likeCount + 1 } : book))}
+        onDeleted={bookId => setBookData(bookData.filter(book => book.id !== bookId))}
+      />
     </>
   )
 }

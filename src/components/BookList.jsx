@@ -1,44 +1,75 @@
+import { Table, Button, Space, Popconfirm, Tag } from 'antd';
+
+
 export default function BookList(props) {
 
-  const generateRows = () => {
-    if (props.data != null) {
-      return props.data.map(book => (
-        <tr key={book.id} bgcolor={book.stock >= 30 ? "green" : "red"}>
-          <td>{book.title}</td>
-          <td>{book.author}</td>
-          <td>{book.description}</td>
-          <td>{book.price}</td>
-          <td>{book.isbn}</td>
-          <td>{book.stock}</td>
-          <td>{book.likeCount}</td>
-          <td>
-            <button onClick={ () => props.onLiked(book.id) }>Like</button>
-            <button onClick={() => props.onDeleted(book.id)}>Delete</button>
-          </td>
-        </tr>
-      ))
+  const columns = [
+    {
+      title: 'Title',
+      dataIndex: 'title',
+      key: 'title',
+    },
+    {
+      title: 'Author',
+      dataIndex: 'author',
+      key: 'author',
+    },
+    {
+      title: 'Description',
+      dataIndex: 'description',
+      key: 'description',
+    },
+    {
+      title: 'Price',
+      dataIndex: 'price',
+      key: 'price',
+    },
+    {
+      title: 'ISBN',
+      dataIndex: 'isbn',
+      key: 'isbn',
+    },
+    {
+      title: 'Stock',
+      dataIndex: 'stock',
+      key: 'stock',
+    },
+    {
+      title: 'Category',
+      dataIndex: 'category',
+      key: 'category',
+      render: (text) => (
+        <Tag color="blue">{text}</Tag>
+      ),
+    },
+    {
+      title: 'Liked',
+      dataIndex: 'likeCount',
+      key: 'likeCount',
+    },
+    {
+      title: 'Action',
+      key: 'action',
+      render: (text, record) => (
+      <Space>
+        <Button type="primary" onClick={() => props.onLiked(record.id)}>Like</Button>
+        <Popconfirm title="Are you sure you want to delete this book?" onConfirm={() => props.onDeleted(record.id)}>
+          <Button danger type="dashed">Delete</Button>
+        </Popconfirm>
+      </Space>
+    ),
     }
-    else {
-      return null;
-    }
-  }
+  ]
 
   return (
-    <table border="1">
-      <thead>
-        <tr>
-          <th>Title</th>
-          <th>Author</th>
-          <th>Description</th>
-          <th>Price</th>
-          <th>ISBN</th>
-          <th>Stock</th>
-          <th>Like</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody>{generateRows()}</tbody>
-    </table>
+    <Table 
+      rowKey="id" 
+      dataSource={props.data} 
+      columns={columns} 
+      rowClassName={(record, index) => {
+        if(record.stock < 30) {
+          return "red-row";
+        }
+      }}/>
   )
 }
-
