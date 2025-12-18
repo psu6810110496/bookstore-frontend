@@ -39,7 +39,7 @@ export default function BookList(props) {
       dataIndex: 'coverUrl',
       render: (text) => (
         <Image src={`http://localhost:3080/${text}`} height={100} />
-      )
+      ),
     },
     {
       title: 'Category',
@@ -59,7 +59,8 @@ export default function BookList(props) {
       key: 'action',
       render: (text, record) => (
       <Space>
-        <Button type="primary" onClick={() => props.onLiked(record.id)}>Like</Button>
+        <Button type="primary" onClick={() => props.onLiked(record)}>Like</Button>
+        <Button type="secondary" onClick={() => props.onEdit(record)}>Edit</Button>
         <Popconfirm title="Are you sure you want to delete this book?" onConfirm={() => props.onDeleted(record.id)}>
           <Button danger type="dashed">Delete</Button>
         </Popconfirm>
