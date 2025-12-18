@@ -5,8 +5,8 @@ import BookList from "./components/BookList";
 function App() {
   const [totalAmount, setTotalAmount] = useState(0)
   const [bookData, setBookData] = useState([
-    { id: 1, title: "Harry Potter", author: "J.K. Rowling", description: "Orphan Harry learns he is a wizard", price: 15.70, isbn: "978-1408825945", stock: 10 },
-    { id: 2, title: "Sapiens", author: "Yuval Noah Harari", description: "A brief history of humankind", price: 22.99, isbn: "978-0062316097", stock: 50 },
+    { id: 1, title: "Harry Potter", author: "J.K. Rowling", description: "Orphan Harry learns he is a wizard", price: 15.70, isbn: "978-1408825945", stock: 10, likeCount: 7 },
+    { id: 2, title: "Sapiens", author: "Yuval Noah Harari", description: "A brief history of humankind", price: 22.99, isbn: "978-0062316097", stock: 50, likeCount: 5 },
   ])
   const [title, setTitle] = useState("")
   const [price, setPrice] = useState(0)
@@ -29,13 +29,27 @@ function App() {
     setBookData([...bookData, {title: title, price: price, stock: stock}])
   }
 
+  const handleLiked = (bookId) => {
+    setBookData(
+      bookData.map(book => {
+        return book.id === bookId ? { ...book, likeCount: book.likeCount + 1 } : book
+      }
+    ))
+  }
+
+  const handleDeleted = (bookId) => {
+    setBookData(
+      bookData.filter(book => book.id != bookId)
+    )
+  }
+
+
   useEffect(() => {
     setTotalAmount(bookData.reduce((total, book) => total += (book.price * book.stock), 0))
   }, [bookData])
 
   return (
     <>
-      <h1>Books Store</h1>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <label>Title : </label>
         <input type="text" onChange={(evt) => setTitle(evt.target.value)}/>
@@ -46,7 +60,7 @@ function App() {
         <button onClick={handleAddBook}>New Book</button>
       </div>
       <h3>My books worth {totalAmount} dollars</h3>
-      <BookList data={bookData}/>
+      <BookList data={bookData} onLiked={handleLiked} onDeleted={handleDeleted}/>
     </>
   )
 }
