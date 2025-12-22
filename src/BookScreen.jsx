@@ -36,20 +36,20 @@ function BookScreen({ onLogout }) {
   const handleAddCategory = async (name) => {
     try {
       await axios.post(URL_CATEGORY, { name });
-      message.success('เพิ่มหมวดหมู่สำเร็จ');
+      message.success('Category added successfully');
       fetchCategories();
     } catch (err) {
-      message.error('ไม่สามารถเพิ่มหมวดหมู่ได้');
+      message.error('Failed to add category');
     }
   };
 
   const handleDeleteCategory = async (id) => {
     try {
       await axios.delete(`${URL_CATEGORY}/${id}`);
-      message.success('ลบหมวดหมู่สำเร็จ');
+      message.success('Category deleted successfully');
       fetchCategories();
     } catch (err) {
-      message.error('ลบไม่สำเร็จ (อาจมีหนังสืออยู่ในหมวดหมู่ต้นทาง)');
+      message.error('Failed to delete (category may contain books)');
     }
   };
 
@@ -59,7 +59,7 @@ function BookScreen({ onLogout }) {
       const response = await axios.get(URL_BOOK);
       setBookData(response.data);
     } catch (error) {
-      message.error('โหลดข้อมูลหนังสือไม่สำเร็จ');
+      message.error('Failed to load book data');
     } finally {
       setLoading(false);
     }
@@ -69,10 +69,10 @@ function BookScreen({ onLogout }) {
     setLoading(true);
     try {
       await axios.post(URL_BOOK, bookValues);
-      message.success('เพิ่มหนังสือใหม่เรียบร้อยแล้ว');
+      message.success('New book added successfully');
       fetchBooks();
     } catch (error) {
-      message.error('ไม่สามารถเพิ่มหนังสือได้ (เช็คขนาดไฟล์รูปภาพ)');
+      message.error('Failed to add book (check image file size)');
     } finally {
       setLoading(false);
     }
@@ -81,10 +81,10 @@ function BookScreen({ onLogout }) {
   const handleDeleteBook = async (bookId) => {
     try {
       await axios.delete(`${URL_BOOK}/${bookId}`);
-      message.success('ลบหนังสือออกแล้ว');
+      message.success('Book removed successfully');
       fetchBooks();
     } catch (error) {
-      message.error('ลบไม่สำเร็จ');
+      message.error('Failed to delete book');
     }
   };
 
@@ -93,11 +93,11 @@ function BookScreen({ onLogout }) {
     try {
       const { id, category, createdAt, updatedAt, ...data } = values;
       await axios.patch(`${URL_BOOK}/${id}`, data);
-      message.success('แก้ไขข้อมูลสำเร็จ');
+      message.success('Update successful');
       setEditBook(null);
       fetchBooks();
     } catch (error) {
-      message.error('แก้ไขข้อมูลล้มเหลว');
+      message.error('Failed to update information');
     } finally {
       setLoading(false);
     }

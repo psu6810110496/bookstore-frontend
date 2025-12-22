@@ -35,7 +35,10 @@ const AddBook = ({ categories, onBookAdded }) => {
           </Form.Item>
         </Col>
         <Col xs={24} sm={12} md={6}>
-          <Form.Item name="description" label="Description">
+          <Form.Item
+            name="description"
+            label="Description"
+            rules={[{ required: true, message: 'Please enter description'}]}>
             <Input placeholder="Brief description" />
           </Form.Item>
         </Col>
