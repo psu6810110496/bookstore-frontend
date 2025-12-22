@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Layout, Typography, Button, Divider, Spin, message, Card, Space } from 'antd';
-import { LogoutOutlined, BookFilled } from '@ant-design/icons';
+import { Layout, Typography, Button, Spin, message, Card, Space } from 'antd';
+import { LogoutOutlined, BookFilled, TagOutlined } from '@ant-design/icons';
 import axios from 'axios';
 
 import BookList from './components/BookList';
 import AddBook from './components/AddBook';
 import EditBook from './components/EditBook';
+import CategoryModal from './components/CategoryModal';
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -18,6 +19,7 @@ function BookScreen({ onLogout }) {
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
   const [editBook, setEditBook] = useState(null);
+  const [isCatModalOpen, setIsCatModalOpen] = useState(false);
 
   const fetchCategories = async () => {
     try {
@@ -27,7 +29,27 @@ function BookScreen({ onLogout }) {
         value: cat.id
       })));
     } catch (error) {
-      console.error('Error categories:', error);
+      console.error('Error fetching categories:', error);
+    }
+  };
+
+  const handleAddCategory = async (name) => {
+    try {
+      await axios.post(URL_CATEGORY, { name });
+      message.success('เพิ่มหมวดหมู่สำเร็จ');
+      fetchCategories();
+    } catch (err) {
+      message.error('ไม่สามารถเพิ่มหมวดหมู่ได้');
+    }
+  };
+
+  const handleDeleteCategory = async (id) => {
+    try {
+      await axios.delete(`${URL_CATEGORY}/${id}`);
+      message.success('ลบหมวดหมู่สำเร็จ');
+      fetchCategories();
+    } catch (err) {
+      message.error('ลบไม่สำเร็จ (อาจมีหนังสืออยู่ในหมวดหมู่ต้นทาง)');
     }
   };
 
@@ -50,39 +72,7 @@ function BookScreen({ onLogout }) {
       message.success('เพิ่มหนังสือใหม่เรียบร้อยแล้ว');
       fetchBooks();
     } catch (error) {
-      message.error('ไม่สามารถเพิ่มหนังสือได้');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLikeBook = async (book) => {
-    try {
-      await axios.patch(`${URL_BOOK}/${book.id}`, { 
-        likeCount: (book.likeCount || 0) + 1 
-      });
-      fetchBooks();
-    } catch (error) {
-      message.error('Like ไม่สำเร็จ');
-    }
-  };
-
-  const handleEditBook = async (values) => {
-    setLoading(true);
-    try {
-      const { id, category, createdAt, updatedAt, ...data } = values;
-      const payload = {
-        ...data,
-        price: Number(data.price),
-        stock: Number(data.stock)
-      };
-      
-      await axios.patch(`${URL_BOOK}/${id}`, payload);
-      message.success('แก้ไขข้อมูลสำเร็จ');
-      setEditBook(null);
-      fetchBooks();
-    } catch (error) {
-      message.error('แก้ไขข้อมูลล้มเหลว');
+      message.error('ไม่สามารถเพิ่มหนังสือได้ (เช็คขนาดไฟล์รูปภาพ)');
     } finally {
       setLoading(false);
     }
@@ -98,21 +88,29 @@ function BookScreen({ onLogout }) {
     }
   };
 
+  const handleEditBook = async (values) => {
+    setLoading(true);
+    try {
+      const { id, category, createdAt, updatedAt, ...data } = values;
+      await axios.patch(`${URL_BOOK}/${id}`, data);
+      message.success('แก้ไขข้อมูลสำเร็จ');
+      setEditBook(null);
+      fetchBooks();
+    } catch (error) {
+      message.error('แก้ไขข้อมูลล้มเหลว');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchCategories();
     fetchBooks();
   }, []);
 
   return (
-    <Layout style={{ minHeight: '100vh', background: '#f5f7f9' }}>
-      <Header style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        background: '#001529',
-        padding: '0 40px',
-        width: '100%'
-      }}>
+    <Layout className="screen-layout">
+      <Header className="header-bar">
         <Space>
           <BookFilled style={{ color: '#fff', fontSize: '20px' }} />
           <Title level={4} style={{ color: '#fff', margin: 0 }}>BOOK STORE</Title>
@@ -121,20 +119,19 @@ function BookScreen({ onLogout }) {
           Logout
         </Button>
       </Header>
-
-      <Content style={{ padding: '40px 0' }}>
-        <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '0 40px' }}>
-          <Card 
-            style={{ 
-              marginBottom: '40px', 
-              borderRadius: '12px', 
-              boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-              border: 'none'
-            }}
-          >
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <Title level={5} style={{ marginBottom: '25px' }}>Add Book</Title>
-
+      <Content>
+        <div className="content-wrapper">
+          <Card className="main-card">
+            <div style={{ textAlign: 'center' }}>
+              <Space style={{ marginBottom: '25px' }}>
+                <Title level={5} style={{ margin: 0 }}>Add Book</Title>
+                <Button 
+                  size="small" 
+                  icon={<TagOutlined />} 
+                  onClick={() => setIsCatModalOpen(true)}>
+                  Manage Categories
+                </Button>
+              </Space>
               <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
                 <AddBook categories={categories} onBookAdded={handleAddBook} />
               </div>
@@ -142,24 +139,13 @@ function BookScreen({ onLogout }) {
           </Card>
           <div style={{ textAlign: 'center', marginBottom: '30px' }}>
             <Title level={3} style={{ margin: 0, fontWeight: 600 }}>Books List</Title>
-            <div style={{ 
-              width: '45px', 
-              height: '4px', 
-              background: '#1890ff', 
-              margin: '10px auto 0', 
-              borderRadius: '2px' 
-            }}></div>
+            <div style={{ width: '45px', height: '4px', background: '#1890ff', margin: '10px auto 0', borderRadius: '2px' }} />
           </div>
-          <div style={{ 
-            background: '#fff', 
-            borderRadius: '12px', 
-            padding: '24px', 
-            boxShadow: '0 4px 12px rgba(0,0,0,0.05)' 
-          }}>
+          <div className="table-container">
             <Spin spinning={loading} size="large">
               <BookList 
                 data={bookData} 
-                onLiked={handleLikeBook}
+                onLiked={(book) => {}}
                 onDeleted={handleDeleteBook}
                 onEdit={book => setEditBook(book)}
               />
@@ -167,13 +153,19 @@ function BookScreen({ onLogout }) {
           </div>
         </div>
       </Content>
-
       <EditBook 
         book={editBook} 
         categories={categories} 
         open={editBook !== null} 
         onCancel={() => setEditBook(null)} 
         onSave={handleEditBook} 
+      />
+      <CategoryModal 
+        open={isCatModalOpen}
+        onClose={() => setIsCatModalOpen(false)}
+        categories={categories}
+        onAdd={handleAddCategory}
+        onDelete={handleDeleteCategory}
       />
     </Layout>
   );
