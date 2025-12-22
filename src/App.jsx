@@ -24,6 +24,12 @@ function App() {
     setIsAuthenticated(true);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('access_token');
+    delete axios.defaults.headers.common['Authorization'];
+    setIsAuthenticated(false);
+  };
+
   return (
     <Router>
       <Routes>
@@ -35,7 +41,7 @@ function App() {
         <Route 
           path="/" 
           element={
-            isAuthenticated ? <BookScreen /> : <Navigate to="/login" />
+            isAuthenticated ? <BookScreen onLogout={handleLogout} /> : <Navigate to="/login" />
           } />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>

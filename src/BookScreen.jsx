@@ -1,15 +1,19 @@
-import './App.css'
 import { useState, useEffect } from 'react';
-import { Divider, Spin } from 'antd';
-import axios from 'axios'
-import BookList from './components/BookList'
+import { Layout, Typography, Button, Divider, Spin, message, Card, Space } from 'antd';
+import { LogoutOutlined, BookFilled } from '@ant-design/icons';
+import axios from 'axios';
+
+import BookList from './components/BookList';
 import AddBook from './components/AddBook';
 import EditBook from './components/EditBook';
 
-const URL_BOOK = "/api/book"
-const URL_CATEGORY = "/api/book-category"
+const { Header, Content } = Layout;
+const { Title } = Typography;
 
-function BookScreen() {
+const URL_BOOK = "/api/book";
+const URL_CATEGORY = "/api/book-category";
+
+function BookScreen({ onLogout }) {
   const [bookData, setBookData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
@@ -23,9 +27,9 @@ function BookScreen() {
         value: cat.id
       })));
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.error('Error categories:', error);
     }
-  }
+  };
 
   const fetchBooks = async () => {
     setLoading(true);
@@ -33,62 +37,66 @@ function BookScreen() {
       const response = await axios.get(URL_BOOK);
       setBookData(response.data);
     } catch (error) {
-      console.error('Error fetching books:', error);
+      message.error('โหลดข้อมูลหนังสือไม่สำเร็จ');
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  const handleAddBook = async (book) => {
-    setLoading(true)
+  const handleAddBook = async (bookValues) => {
+    setLoading(true);
     try {
-      const response = await axios.post(URL_BOOK, book);
+      await axios.post(URL_BOOK, bookValues);
+      message.success('เพิ่มหนังสือใหม่เรียบร้อยแล้ว');
       fetchBooks();
     } catch (error) {
-      console.error('Error adding book:', error);
+      message.error('ไม่สามารถเพิ่มหนังสือได้');
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   const handleLikeBook = async (book) => {
-    setLoading(true)
     try {
-      const response = await axios.patch(URL_BOOK + `/${book.id}`, { likeCount: book.likeCount + 1 });
+      await axios.patch(`${URL_BOOK}/${book.id}`, { 
+        likeCount: (book.likeCount || 0) + 1 
+      });
       fetchBooks();
     } catch (error) {
-      console.error('Error liking book:', error);
+      message.error('Like ไม่สำเร็จ');
+    }
+  };
+
+  const handleEditBook = async (values) => {
+    setLoading(true);
+    try {
+      const { id, category, createdAt, updatedAt, ...data } = values;
+      const payload = {
+        ...data,
+        price: Number(data.price),
+        stock: Number(data.stock)
+      };
+      
+      await axios.patch(`${URL_BOOK}/${id}`, payload);
+      message.success('แก้ไขข้อมูลสำเร็จ');
+      setEditBook(null);
+      fetchBooks();
+    } catch (error) {
+      message.error('แก้ไขข้อมูลล้มเหลว');
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   const handleDeleteBook = async (bookId) => {
-    setLoading(true)
     try {
-      const response = await axios.delete(URL_BOOK + `/${bookId}`);
+      await axios.delete(`${URL_BOOK}/${bookId}`);
+      message.success('ลบหนังสือออกแล้ว');
       fetchBooks();
     } catch (error) {
-      console.error('Error deleting book:', error);
-    } finally {
-      setLoading(false);
+      message.error('ลบไม่สำเร็จ');
     }
-  }
-
-  const handleEditBook = async (book) => {
-    setLoading(true)
-    try {
-      const editedData = {...book, 'price': Number(book.price), 'stock': Number(book.stock)}
-      const {id, category, createdAt, updatedAt, ...data} = editedData
-      const response = await axios.patch(URL_BOOK + `/${id}`, data);
-      fetchBooks();
-    } catch (error) {
-      console.error('Error editing book:', error);
-    } finally {
-      setLoading(false);
-      setEditBook(null);
-    }
-  }
+  };
 
   useEffect(() => {
     fetchCategories();
@@ -96,30 +104,79 @@ function BookScreen() {
   }, []);
 
   return (
-    <>
-      <h1 class="main-title">BOOK STORE</h1>
-      <div style={{ display: "flex", justifyContent: "center", marginBottom: "2em" }}>
-        <AddBook categories={categories} onBookAdded={handleAddBook}/>
-      </div>
-      <Divider>
-        My Books List
-      </Divider>
-      <Spin spinning={loading}>
-        <BookList 
-          data={bookData} 
-          onLiked={handleLikeBook}
-          onDeleted={handleDeleteBook}
-          onEdit={book => setEditBook(book)}
-        />
-      </Spin>
+    <Layout style={{ minHeight: '100vh', background: '#f5f7f9' }}>
+      <Header style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        background: '#001529',
+        padding: '0 40px',
+        width: '100%'
+      }}>
+        <Space>
+          <BookFilled style={{ color: '#fff', fontSize: '20px' }} />
+          <Title level={4} style={{ color: '#fff', margin: 0 }}>BOOK STORE</Title>
+        </Space>
+        <Button type="primary" danger icon={<LogoutOutlined />} onClick={onLogout}>
+          Logout
+        </Button>
+      </Header>
+
+      <Content style={{ padding: '40px 0' }}>
+        <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '0 40px' }}>
+          <Card 
+            style={{ 
+              marginBottom: '40px', 
+              borderRadius: '12px', 
+              boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+              border: 'none'
+            }}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <Title level={5} style={{ marginBottom: '25px' }}>Add Book</Title>
+
+              <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+                <AddBook categories={categories} onBookAdded={handleAddBook} />
+              </div>
+            </div>
+          </Card>
+          <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+            <Title level={3} style={{ margin: 0, fontWeight: 600 }}>Books List</Title>
+            <div style={{ 
+              width: '45px', 
+              height: '4px', 
+              background: '#1890ff', 
+              margin: '10px auto 0', 
+              borderRadius: '2px' 
+            }}></div>
+          </div>
+          <div style={{ 
+            background: '#fff', 
+            borderRadius: '12px', 
+            padding: '24px', 
+            boxShadow: '0 4px 12px rgba(0,0,0,0.05)' 
+          }}>
+            <Spin spinning={loading} size="large">
+              <BookList 
+                data={bookData} 
+                onLiked={handleLikeBook}
+                onDeleted={handleDeleteBook}
+                onEdit={book => setEditBook(book)}
+              />
+            </Spin>
+          </div>
+        </div>
+      </Content>
+
       <EditBook 
         book={editBook} 
         categories={categories} 
         open={editBook !== null} 
         onCancel={() => setEditBook(null)} 
-        onSave={handleEditBook} />
-    </>
-  )
+        onSave={handleEditBook} 
+      />
+    </Layout>
+  );
 }
 
-export default BookScreen
+export default BookScreen;
